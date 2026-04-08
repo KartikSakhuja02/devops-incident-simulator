@@ -166,6 +166,10 @@ def state():
 # Run directly (for local testing without Docker)
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
+def main():
+    """Entrypoint for running the API server as a script."""
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+if __name__ == "__main__":
+    main()
