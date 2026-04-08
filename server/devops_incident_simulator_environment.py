@@ -167,12 +167,12 @@ def compute_reward(
     """
     Returns (reward, feedback_message, is_done).
 
-    Scoring rubric:
-        1.0  — correct service + correct action on first try
+    Scoring rubric (strictly within (0, 1)):
+        0.99 — correct service + correct action on first try
         0.75 — correct service + correct action (not first try)
         0.5  — correct service, wrong action type
         0.25 — wrong service but action type is valid
-        0.0  — ignore action or completely wrong
+        0.01 — ignore action or completely wrong
     """
     correct_service = scenario["root_cause_service"]
     correct_actions = scenario["correct_actions"]
@@ -183,16 +183,16 @@ def compute_reward(
     right_action  = (agent_action in correct_actions)
 
     if agent_action == "ignore":
-        return 0.0, (
+        return 0.01, (
             "The agent chose to ignore the incident. There is a real error "
             f"in '{correct_service}' that must be addressed."
         ), False
 
     if right_service and right_action:
-        speed_bonus = 1.0 if step_number == 1 else 0.75
+        speed_bonus = 0.99 if step_number == 1 else 0.75
         return speed_bonus, (
             f"Correct! '{agent_action}' on '{agent_service}' is the right fix. "
-            + ("First-try bonus applied!" if speed_bonus == 1.0 else "")
+            + ("First-try bonus applied!" if speed_bonus == 0.99 else "")
         ), True
 
     if right_service and not right_action:
@@ -210,7 +210,7 @@ def compute_reward(
 
     # Wrong service AND wrong action
     steps_left = max_steps - step_number
-    return 0.0, (
+    return 0.01, (
         f"'{agent_action}' on '{agent_service}' did not help. "
         f"Re-read the logs carefully. {steps_left} step(s) remaining."
     ), False

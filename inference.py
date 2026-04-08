@@ -211,14 +211,14 @@ def run_agent_on_task(client: DevOpsEnvClient, task_id: str) -> dict:
             step=0,
             action_type="error",
             target_service="unknown",
-            reward=0.0,
+            reward=0.01,
             done=True,
             feedback=msg,
         )
-        log_end(task_id, 0.0, 0, False)
+        log_end(task_id, 0.01, 0, False)
         return {
             "task_id": task_id,
-            "final_reward": 0.0,
+            "final_reward": 0.01,
             "steps_taken": 0,
             "success": False,
         }
@@ -226,7 +226,7 @@ def run_agent_on_task(client: DevOpsEnvClient, task_id: str) -> dict:
     print(f"  Services  : {obs.active_services}")
     print()
 
-    final_reward = 0.0
+    final_reward = 0.01
     steps_taken  = 0
     success      = False
 
@@ -257,7 +257,7 @@ def run_agent_on_task(client: DevOpsEnvClient, task_id: str) -> dict:
                 step=step,
                 action_type="error",
                 target_service="unknown",
-                reward=0.0,
+                reward=0.01,
                 done=True,
                 feedback=f"llm_call_failed: {e}",
             )
@@ -295,7 +295,7 @@ def run_agent_on_task(client: DevOpsEnvClient, task_id: str) -> dict:
                 step=step,
                 action_type=action.action_type,
                 target_service=action.target_service,
-                reward=0.0,
+                reward=0.01,
                 done=True,
                 feedback=msg,
             )
@@ -360,9 +360,9 @@ def main():
         print(f"\n[ERROR] {e}")
         print("  Continuing with fail-safe scoring output for all tasks.")
         results = [
-            {"task_id": "task_1", "final_reward": 0.0, "steps_taken": 0, "success": False},
-            {"task_id": "task_2", "final_reward": 0.0, "steps_taken": 0, "success": False},
-            {"task_id": "task_3", "final_reward": 0.0, "steps_taken": 0, "success": False},
+            {"task_id": "task_1", "final_reward": 0.01, "steps_taken": 0, "success": False},
+            {"task_id": "task_2", "final_reward": 0.01, "steps_taken": 0, "success": False},
+            {"task_id": "task_3", "final_reward": 0.01, "steps_taken": 0, "success": False},
         ]
         _print_final_scores(results, elapsed=0.0)
         return
@@ -381,12 +381,12 @@ def main():
                 step=0,
                 action_type="error",
                 target_service="unknown",
-                reward=0.0,
+                reward=0.01,
                 done=True,
                 feedback=f"unexpected_task_exception: {e}",
             )
-            log_end(task_id, 0.0, 0, False)
-            result = {"task_id": task_id, "final_reward": 0.0, "steps_taken": 0, "success": False}
+            log_end(task_id, 0.01, 0, False)
+            result = {"task_id": task_id, "final_reward": 0.01, "steps_taken": 0, "success": False}
         results.append(result)
 
     elapsed = time.time() - start_time
@@ -436,9 +436,9 @@ if __name__ == "__main__":
         print(f"[ERROR] fatal_exception: {e}")
         # Last-resort fail-safe output to avoid hard crash in validators.
         fallback = [
-            {"task_id": "task_1", "final_reward": 0.0, "steps_taken": 0, "success": False},
-            {"task_id": "task_2", "final_reward": 0.0, "steps_taken": 0, "success": False},
-            {"task_id": "task_3", "final_reward": 0.0, "steps_taken": 0, "success": False},
+            {"task_id": "task_1", "final_reward": 0.01, "steps_taken": 0, "success": False},
+            {"task_id": "task_2", "final_reward": 0.01, "steps_taken": 0, "success": False},
+            {"task_id": "task_3", "final_reward": 0.01, "steps_taken": 0, "success": False},
         ]
         _print_final_scores(fallback, elapsed=0.0)
         sys.exit(0)

@@ -48,7 +48,7 @@ tasks:
   - id: task_1
     difficulty: easy
     max_steps: 5
-    reward_range: [0.0, 1.0]
+    reward_range: [0.01, 0.99]
     description: >
       A single service is throwing an obvious error (NullPointerException or
       OOMKill). The agent must identify the faulty service from the logs and
@@ -56,12 +56,12 @@ tasks:
     grader:
       type: reward_threshold
       pass_threshold: 0.5
-      perfect_threshold: 1.0
+      perfect_threshold: 0.99
 
   - id: task_2
     difficulty: medium
     max_steps: 5
-    reward_range: [0.0, 1.0]
+    reward_range: [0.01, 0.99]
     description: >
       A CI/CD deployment is stuck in CrashLoopBackOff or a ConfigMap update
       corrupted a service's configuration. The pipeline is partially deployed.
@@ -69,12 +69,12 @@ tasks:
     grader:
       type: reward_threshold
       pass_threshold: 0.5
-      perfect_threshold: 1.0
+      perfect_threshold: 0.99
 
   - id: task_3
     difficulty: hard
     max_steps: 5
-    reward_range: [0.0, 1.0]
+    reward_range: [0.01, 0.99]
     description: >
       A cascading failure has taken down multiple services. The database
       deadlocked, exhausted its connection pool, and caused downstream failures
@@ -84,7 +84,7 @@ tasks:
     grader:
       type: reward_threshold
       pass_threshold: 0.5
-      perfect_threshold: 1.0
+      perfect_threshold: 0.99
 
 # ---------------------------------------------------------------------------
 # Action space
@@ -146,16 +146,16 @@ observation_space:
 # ---------------------------------------------------------------------------
 
 reward:
-  range: [0.0, 1.0]
+  range: [0.01, 0.99]
   partial_credit: true
   description: >
     Rewards are given based on correctness of both the target service and
-    action type. Correct service + correct action on the first step gives 1.0
+    action type. Correct service + correct action on the first step gives 0.99
     (first-try bonus). Correct service + correct action on later steps gives
     0.75. Correct service but wrong action gives 0.5. Wrong service but valid
-    action type gives 0.25. Ignore or completely wrong gives 0.0.
+    action type gives 0.25. Ignore or completely wrong gives 0.01.
   rubric:
-    - score: 1.0
+    - score: 0.99
       condition: "Correct service + correct action + first step"
     - score: 0.75
       condition: "Correct service + correct action (not first step)"
@@ -163,7 +163,7 @@ reward:
       condition: "Correct service identified, wrong action type"
     - score: 0.25
       condition: "Wrong service, but valid action type chosen"
-    - score: 0.0
+    - score: 0.01
       condition: "Ignore action or both service and action wrong"
 
 # ---------------------------------------------------------------------------
