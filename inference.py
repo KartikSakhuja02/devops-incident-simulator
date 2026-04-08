@@ -142,16 +142,16 @@ def log_step(
 ) -> None:
     compact_feedback = " ".join((feedback or "").split())
     print(
-        f"[STEP] ts={_ts()} task_id={task_id} step={step} action_type={action_type} "
-        f"target_service={target_service} reward={reward:.2f} done={str(done).lower()} "
+        f"[STEP] ts={_ts()} task_id={task_id} action_type={action_type} "
+        f"target_service={target_service} score={reward:.2f} done={str(done).lower()} "
         f"feedback=\"{compact_feedback}\""
     )
 
 
 def log_end(task_id: str, final_reward: float, steps_taken: int, success: bool) -> None:
     print(
-        f"[END] ts={_ts()} task_id={task_id} final_reward={final_reward:.2f} "
-        f"steps={steps_taken} success={str(success).lower()}"
+        f"[END] ts={_ts()} task_id={task_id} score={final_reward:.2f} "
+        f"status={('pass' if success else 'fail')}"
     )
 
 
@@ -407,8 +407,7 @@ def _print_final_scores(results: list[dict], elapsed: float) -> None:
         status = "PASS" if r["success"] else "FAIL"
         print(
             f"  [{status}] {r['task_id']:8s} | "
-            f"reward={r['final_reward']:.2f} | "
-            f"steps={r['steps_taken']} | "
+            f"score={r['final_reward']:.2f} | "
             f"success={r['success']}"
         )
         total_reward += r["final_reward"]
