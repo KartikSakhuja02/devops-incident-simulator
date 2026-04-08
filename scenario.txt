@@ -1,0 +1,121 @@
+"task_1": [
+        {
+            "name": "null_pointer_in_payment_service",
+            "difficulty": "easy",
+            "root_cause_service": "payment-service",
+            "correct_actions": ["rollback", "patch"],
+            "logs": [
+                "[INFO]  2024-04-01 10:00:01 auth-service        — Request received: POST /login",
+                "[INFO]  2024-04-01 10:00:02 auth-service        — User authenticated successfully",
+                "[INFO]  2024-04-01 10:00:03 payment-service     — Processing payment for order #8821",
+                "[ERROR] 2024-04-01 10:00:04 payment-service     — NullPointerException at PaymentProcessor.java:142",
+                "[ERROR] 2024-04-01 10:00:04 payment-service     — Transaction aborted. order_id=8821",
+                "[WARN]  2024-04-01 10:00:05 payment-service     — Retry attempt 1/3 failed",
+                "[WARN]  2024-04-01 10:00:06 payment-service     — Retry attempt 2/3 failed",
+                "[ERROR] 2024-04-01 10:00:07 payment-service     — Max retries exceeded. Service degraded.",
+                "[INFO]  2024-04-01 10:00:08 frontend            — Received 500 from payment-service",
+            ],
+            "task_description": (
+                "The payment-service is throwing a NullPointerException and failing "
+                "all transactions. Identify the faulty service and fix it."
+            ),
+        },
+        {
+            "name": "oom_kill_in_worker_service",
+            "difficulty": "easy",
+            "root_cause_service": "worker-service",
+            "correct_actions": ["restart", "rollback"],
+            "logs": [
+                "[INFO]  2024-04-01 11:00:01 scheduler           — Triggering daily batch job",
+                "[INFO]  2024-04-01 11:00:02 worker-service      — Batch job started, processing 50000 records",
+                "[WARN]  2024-04-01 11:00:10 worker-service      — Memory usage at 85%",
+                "[WARN]  2024-04-01 11:00:15 worker-service      — Memory usage at 95%",
+                "[ERROR] 2024-04-01 11:00:18 worker-service      — OOMKilled: Container exceeded memory limit (512Mi)",
+                "[ERROR] 2024-04-01 11:00:18 worker-service      — Process terminated unexpectedly",
+                "[INFO]  2024-04-01 11:00:19 scheduler           — Batch job failed. Exit code: 137",
+            ],
+            "task_description": (
+                "The worker-service was OOM-killed during a batch job. "
+                "Identify the service and take the correct remediation action."
+            ),
+        },
+    ],
+
+    # ── MEDIUM (Task 2) ──────────────────────────────────────────────────────
+    "task_2": [
+        {
+            "name": "failed_deploy_partial_rollout",
+            "difficulty": "medium",
+            "root_cause_service": "api-gateway",
+            "correct_actions": ["rollback"],
+            "logs": [
+                "[INFO]  2024-04-01 12:00:01 ci-cd-pipeline      — Starting deployment v2.4.1 → v2.4.2",
+                "[INFO]  2024-04-01 12:00:05 ci-cd-pipeline      — Building Docker image... success",
+                "[INFO]  2024-04-01 12:00:20 ci-cd-pipeline      — Pushing image to registry... success",
+                "[INFO]  2024-04-01 12:00:25 ci-cd-pipeline      — Rolling out to 3 pods (1/3 updated)",
+                "[INFO]  2024-04-01 12:00:30 ci-cd-pipeline      — Rolling out to 3 pods (2/3 updated)",
+                "[ERROR] 2024-04-01 12:00:35 api-gateway         — CrashLoopBackOff: pod api-gateway-v2.4.2-abc123",
+                "[ERROR] 2024-04-01 12:00:36 api-gateway         — Readiness probe failed: HTTP 503",
+                "[ERROR] 2024-04-01 12:00:37 api-gateway         — Liveness probe failed: connection refused",
+                "[WARN]  2024-04-01 12:00:38 ci-cd-pipeline      — Rollout stalled. 2/3 pods healthy.",
+                "[ERROR] 2024-04-01 12:00:40 api-gateway         — New pod failing to start. Env var API_SECRET missing.",
+                "[WARN]  2024-04-01 12:00:42 frontend            — Elevated error rate: 34% of requests returning 503",
+                "[INFO]  2024-04-01 12:00:45 ci-cd-pipeline      — Deployment FAILED. Manual intervention required.",
+            ],
+            "task_description": (
+                "A deployment of api-gateway v2.4.2 is stuck in CrashLoopBackOff "
+                "due to a missing environment variable. The pipeline is partially "
+                "deployed. You must rollback to restore service."
+            ),
+        },
+        {
+            "name": "config_map_corruption",
+            "difficulty": "medium",
+            "root_cause_service": "auth-service",
+            "correct_actions": ["rollback", "redeploy"],
+            "logs": [
+                "[INFO]  2024-04-01 13:00:01 ci-cd-pipeline      — ConfigMap update applied: auth-service-config v3",
+                "[INFO]  2024-04-01 13:00:02 auth-service        — Reloading configuration...",
+                "[ERROR] 2024-04-01 13:00:03 auth-service        — Failed to parse JWT_SECRET: invalid base64 encoding",
+                "[ERROR] 2024-04-01 13:00:03 auth-service        — Authentication module failed to initialise",
+                "[ERROR] 2024-04-01 13:00:04 auth-service        — All login requests failing: 500 Internal Server Error",
+                "[WARN]  2024-04-01 13:00:06 api-gateway         — Auth service health check failing",
+                "[ERROR] 2024-04-01 13:00:08 frontend            — Users unable to log in. Auth service unreachable.",
+                "[ERROR] 2024-04-01 13:00:10 monitoring          — SLO breach: auth-service availability < 99.9%",
+            ],
+            "task_description": (
+                "A bad ConfigMap update corrupted the auth-service configuration. "
+                "Users cannot log in. Identify the service and roll back the config."
+            ),
+        },
+    ],
+
+    # ── HARD (Task 3) ────────────────────────────────────────────────────────
+    "task_3": [
+        {
+            "name": "cascading_db_failure",
+            "difficulty": "hard",
+            "root_cause_service": "database",
+            "correct_actions": ["restart", "rollback"],
+            "logs": [
+                "[INFO]  2024-04-01 14:00:01 database            — Running scheduled index optimisation",
+                "[WARN]  2024-04-01 14:00:05 database            — Lock contention detected on orders table",
+                "[ERROR] 2024-04-01 14:00:10 database            — Deadlock detected. Rolling back 12 transactions.",
+                "[ERROR] 2024-04-01 14:00:11 database            — Connection pool exhausted: 500/500 connections used",
+                "[ERROR] 2024-04-01 14:00:12 payment-service     — DB connection timeout after 30s",
+                "[ERROR] 2024-04-01 14:00:12 payment-service     — Failed to process 47 pending transactions",
+                "[ERROR] 2024-04-01 14:00:13 order-service       — Cannot fetch order status: DB unavailable",
+                "[ERROR] 2024-04-01 14:00:14 order-service       — 503 returned to 1,240 users",
+                "[ERROR] 2024-04-01 14:00:15 api-gateway         — Upstream errors from payment-service and order-service",
+                "[ERROR] 2024-04-01 14:00:16 frontend            — Dashboard showing errors for all order/payment features",
+                "[WARN]  2024-04-01 14:00:18 monitoring          — PagerDuty alert fired: P1 — Multiple services degraded",
+                "[ERROR] 2024-04-01 14:00:20 database            — Replica lag: 45 seconds. Data consistency at risk.",
+            ],
+            "task_description": (
+                "A database deadlock caused connection pool exhaustion which cascaded "
+                "into payment-service, order-service, api-gateway, and frontend failures. "
+                "Identify the ROOT CAUSE service and apply the correct fix."
+            ),
+        },
+    ],
+}

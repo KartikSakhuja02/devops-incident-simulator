@@ -1,0 +1,199 @@
+# openenv.yaml — Environment manifest for the DevOps Incident Response Simulator
+#
+# This file is validated automatically by the hackathon pre-submission checker.
+# It describes the environment, its tasks, and its action/observation spaces.
+
+# ---------------------------------------------------------------------------
+# Environment identity
+# ---------------------------------------------------------------------------
+
+name: devops-incident-simulator
+version: "1.0.0"
+description: >
+  A real-world DevOps incident response environment where an AI agent reads
+  pipeline logs, identifies the root cause of failures, and applies the correct
+  remediation action (rollback, patch, redeploy, restart) to restore service.
+  Simulates real production incidents including NullPointerExceptions, OOMKills,
+  CrashLoopBackOffs, config corruption, and cascading database failures.
+
+author: "Kartik"
+license: "MIT"
+
+# ---------------------------------------------------------------------------
+# Server configuration
+# ---------------------------------------------------------------------------
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  framework: fastapi
+  entrypoint: "server/app.py"
+
+# ---------------------------------------------------------------------------
+# API endpoints (OpenEnv standard)
+# ---------------------------------------------------------------------------
+
+endpoints:
+  health: "GET  /health"
+  reset:  "POST /reset"
+  step:   "POST /step"
+  state:  "GET  /state"
+  tasks:  "GET  /tasks"
+
+# ---------------------------------------------------------------------------
+# Tasks — minimum 3 required by hackathon spec
+# ---------------------------------------------------------------------------
+
+tasks:
+  - id: task_1
+    difficulty: easy
+    max_steps: 5
+    reward_range: [0.0, 1.0]
+    description: >
+      A single service is throwing an obvious error (NullPointerException or
+      OOMKill). The agent must identify the faulty service from the logs and
+      apply the correct fix (rollback or restart).
+    grader:
+      type: reward_threshold
+      pass_threshold: 0.5
+      perfect_threshold: 1.0
+
+  - id: task_2
+    difficulty: medium
+    max_steps: 5
+    reward_range: [0.0, 1.0]
+    description: >
+      A CI/CD deployment is stuck in CrashLoopBackOff or a ConfigMap update
+      corrupted a service's configuration. The pipeline is partially deployed.
+      The agent must identify the affected service and roll back to restore it.
+    grader:
+      type: reward_threshold
+      pass_threshold: 0.5
+      perfect_threshold: 1.0
+
+  - id: task_3
+    difficulty: hard
+    max_steps: 5
+    reward_range: [0.0, 1.0]
+    description: >
+      A cascading failure has taken down multiple services. The database
+      deadlocked, exhausted its connection pool, and caused downstream failures
+      in payment-service, order-service, api-gateway, and frontend. The agent
+      must identify the ROOT CAUSE service (not the downstream symptoms) and
+      apply the correct fix.
+    grader:
+      type: reward_threshold
+      pass_threshold: 0.5
+      perfect_threshold: 1.0
+
+# ---------------------------------------------------------------------------
+# Action space
+# ---------------------------------------------------------------------------
+
+action_space:
+  type: discrete_with_parameters
+  schema:
+    action_type:
+      type: string
+      enum: [rollback, patch, redeploy, restart, ignore]
+      description: "The type of remediation action to take."
+    target_service:
+      type: string
+      description: "The name of the service to act on."
+    reasoning:
+      type: string
+      description: "The agent's explanation for why it chose this action."
+    patch_content:
+      type: string
+      nullable: true
+      description: "For patch actions: a short description of the fix."
+
+# ---------------------------------------------------------------------------
+# Observation space
+# ---------------------------------------------------------------------------
+
+observation_space:
+  type: structured
+  schema:
+    logs:
+      type: array
+      items: string
+      description: "List of log lines from the pipeline run."
+    pipeline_status:
+      type: string
+      enum: [healthy, degraded, failed]
+      description: "Overall health of the pipeline."
+    active_services:
+      type: array
+      items: string
+      description: "Names of all services present in the logs."
+    error_detected:
+      type: boolean
+      description: "Whether a critical error was detected in the logs."
+    error_service:
+      type: string
+      nullable: true
+      description: "Root cause service (revealed only after correct action)."
+    step_number:
+      type: integer
+      description: "Current step number within the episode."
+    task_description:
+      type: string
+      description: "Human-readable description of what needs to be fixed."
+
+# ---------------------------------------------------------------------------
+# Reward function description
+# ---------------------------------------------------------------------------
+
+reward:
+  range: [0.0, 1.0]
+  partial_credit: true
+  description: >
+    Rewards are given based on correctness of both the target service and
+    action type. Correct service + correct action on the first step gives 1.0
+    (first-try bonus). Correct service + correct action on later steps gives
+    0.75. Correct service but wrong action gives 0.5. Wrong service but valid
+    action type gives 0.25. Ignore or completely wrong gives 0.0.
+  rubric:
+    - score: 1.0
+      condition: "Correct service + correct action + first step"
+    - score: 0.75
+      condition: "Correct service + correct action (not first step)"
+    - score: 0.5
+      condition: "Correct service identified, wrong action type"
+    - score: 0.25
+      condition: "Wrong service, but valid action type chosen"
+    - score: 0.0
+      condition: "Ignore action or both service and action wrong"
+
+# ---------------------------------------------------------------------------
+# Infrastructure constraints (hackathon requirement)
+# ---------------------------------------------------------------------------
+
+infrastructure:
+  max_inference_runtime_minutes: 20
+  min_vcpu: 2
+  min_memory_gb: 8
+  docker_required: true
+
+# ---------------------------------------------------------------------------
+# Environment variables required
+# ---------------------------------------------------------------------------
+
+env_vars:
+  - name: API_BASE_URL
+    description: "The API endpoint for the LLM (e.g. https://api-inference.huggingface.co/v1)"
+    required: true
+  - name: MODEL_NAME
+    description: "The model identifier (e.g. meta-llama/Llama-3.1-8B-Instruct)"
+    required: true
+  - name: HF_TOKEN
+    description: "Your Hugging Face API token"
+    required: true
+
+# ---------------------------------------------------------------------------
+# Submission
+# ---------------------------------------------------------------------------
+
+inference_script: "inference.py"
+dockerfile: "server/Dockerfile"
