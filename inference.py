@@ -415,7 +415,6 @@ def _print_final_scores(results: list[dict], elapsed: float) -> None:
 
     avg_reward = total_reward / len(results)
     print(f"{'─' * 55}")
-    print(f"  Total reward : {total_reward:.2f} / {len(results):.1f}")
     print(f"  Avg reward   : {avg_reward:.2f}")
     print(f"  Runtime      : {elapsed:.1f}s")
     print(f"{'=' * 55}")

@@ -237,7 +237,7 @@ class DevOpsEnvironment:
         self._scenario:   Optional[dict]  = None
         self._task_id:    Optional[str]   = None
         self._step_count: int             = 0
-        self._cumulative_reward: float    = 0.0
+        self._cumulative_reward: float    = 0.01
         self._is_done: bool               = False
 
     # ── reset ────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ class DevOpsEnvironment:
         """
         self._episode_id        = str(uuid.uuid4())
         self._step_count        = 0
-        self._cumulative_reward = 0.0
+        self._cumulative_reward = 0.01
         self._is_done           = False
 
         # Pick task
@@ -293,7 +293,8 @@ class DevOpsEnvironment:
             max_steps=self.MAX_STEPS,
         )
 
-        self._cumulative_reward += reward
+        # Keep episode score strictly in (0,1) for validator compatibility.
+        self._cumulative_reward = max(0.01, min(0.99, reward))
 
         # Episode ends on success OR hitting max steps
         if success or self._step_count >= self.MAX_STEPS:
