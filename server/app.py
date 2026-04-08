@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from typing import Optional
 
@@ -76,6 +77,31 @@ def health():
     The hackathon validator pings this — must return 200.
     """
     return {"status": "ok", "environment": "devops-incident-simulator"}
+
+
+@app.get("/")
+def root_redirect():
+        """Default landing path for browsers and platform probes."""
+        return RedirectResponse(url="/web", status_code=302)
+
+
+@app.get("/web", response_class=HTMLResponse)
+def web_ui():
+        """Minimal web page so HF Spaces '/web' probe doesn't return 404."""
+        return """
+        <html>
+            <head><title>DevOps Incident Simulator</title></head>
+            <body style="font-family: sans-serif; margin: 2rem;">
+                <h1>DevOps Incident Simulator</h1>
+                <p>Environment server is running.</p>
+                <ul>
+                    <li><a href=\"/health\">/health</a></li>
+                    <li><a href=\"/tasks\">/tasks</a></li>
+                    <li><a href=\"/docs\">/docs</a></li>
+                </ul>
+            </body>
+        </html>
+        """
 
 
 @app.get("/tasks")
