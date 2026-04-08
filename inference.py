@@ -419,10 +419,6 @@ def _print_final_scores(results: list[dict], elapsed: float) -> None:
     print(f"  Avg reward   : {avg_reward:.2f}")
     print(f"  Runtime      : {elapsed:.1f}s")
     print(f"{'=' * 55}")
-    print(
-        f"[END] ts={_ts()} task_id=all final_reward={total_reward:.2f} "
-        f"steps={sum(r['steps_taken'] for r in results)} success={str(all(r['success'] for r in results)).lower()}"
-    )
 
     # Keep exit code 0 so validators receive scores even when tasks fail.
     return
