@@ -125,10 +125,7 @@ def _ts() -> str:
 
 
 def log_start(task_id: str, model_name: str, api_base_url: str, server_url: str) -> None:
-    print(
-        f"[START] ts={_ts()} task_id={task_id} model={model_name} "
-        f"api_base_url={api_base_url} server_url={server_url}"
-    )
+    print(f"[START] task_id={task_id}")
 
 
 def log_step(
@@ -142,7 +139,7 @@ def log_step(
 ) -> None:
     compact_feedback = " ".join((feedback or "").split())
     print(
-        f"[STEP] ts={_ts()} task_id={task_id} action_type={action_type} "
+        f"[STEP] task_id={task_id} action_type={action_type} "
         f"target_service={target_service} score={reward:.2f} done={str(done).lower()} "
         f"feedback=\"{compact_feedback}\""
     )
@@ -150,7 +147,7 @@ def log_step(
 
 def log_end(task_id: str, final_reward: float, steps_taken: int, success: bool) -> None:
     print(
-        f"[END] ts={_ts()} task_id={task_id} score={final_reward:.2f} "
+        f"[END] task_id={task_id} score={final_reward:.2f} "
         f"status={('pass' if success else 'fail')}"
     )
 
@@ -341,13 +338,7 @@ def run_agent_on_task(client: DevOpsEnvClient, task_id: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def main():
-    print("=" * 55)
-    print("  DevOps Incident Response Simulator — Inference")
-    print("=" * 55)
-    print(f"  Model      : {MODEL_NAME}")
-    print(f"  API Base   : {API_BASE_URL}")
-    print(f"  Server     : {SERVER_URL}")
-    print("=" * 55)
+    print("DevOps Incident Response Simulator - Inference")
 
     # Connect to environment server
     client = DevOpsEnvClient(base_url=SERVER_URL)
@@ -398,9 +389,7 @@ def _print_final_scores(results: list[dict], elapsed: float) -> None:
     # ---------------------------------------------------------------------------
     # Final scores report — validators check this output
     # ---------------------------------------------------------------------------
-    print(f"\n{'=' * 55}")
-    print("  FINAL SCORES")
-    print(f"{'=' * 55}")
+    print("\nFINAL SCORES")
 
     total_reward = 0.0
     for r in results:
@@ -413,10 +402,7 @@ def _print_final_scores(results: list[dict], elapsed: float) -> None:
         total_reward += r["final_reward"]
 
     avg_reward = total_reward / len(results)
-    print(f"{'─' * 55}")
-    print(f"  Avg reward   : {avg_reward:.2f}")
-    print(f"  Runtime      : {elapsed:.1f}s")
-    print(f"{'=' * 55}")
+    print(f"  Avg score    : {avg_reward:.2f}")
 
     # Keep exit code 0 so validators receive scores even when tasks fail.
     return
