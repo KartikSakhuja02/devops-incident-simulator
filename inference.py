@@ -124,6 +124,11 @@ def _ts() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _safe_score(value: float) -> float:
+    """Clamp score to strict open interval required by validator."""
+    return max(0.01, min(0.99, float(value)))
+
+
 def log_start(task_id: str, model_name: str, api_base_url: str, server_url: str) -> None:
     print(f"[START] task_id={task_id}")
 
@@ -137,19 +142,13 @@ def log_step(
     done: bool,
     feedback: str,
 ) -> None:
-    compact_feedback = " ".join((feedback or "").split())
-    print(
-        f"[STEP] task_id={task_id} action_type={action_type} "
-        f"target_service={target_service} score={reward:.2f} done={str(done).lower()} "
-        f"feedback=\"{compact_feedback}\""
-    )
+    score = _safe_score(reward)
+    print(f"[STEP] task_id={task_id} score={score:.2f}")
 
 
 def log_end(task_id: str, final_reward: float, steps_taken: int, success: bool) -> None:
-    print(
-        f"[END] task_id={task_id} score={final_reward:.2f} "
-        f"status={('pass' if success else 'fail')}"
-    )
+    score = _safe_score(final_reward)
+    print(f"[END] task_id={task_id} score={score:.2f}")
 
 
 # ---------------------------------------------------------------------------
@@ -298,8 +297,8 @@ def run_agent_on_task(client: DevOpsEnvClient, task_id: str) -> dict:
             )
             break
         steps_taken   = step
-        final_reward  = result.reward
-        print(f"  [Step {step}] Reward : {result.reward}")
+        final_reward  = _safe_score(result.reward)
+        print(f"  [Step {step}] Reward : {final_reward}")
         print(f"  [Step {step}] Feedback: {result.feedback}")
         log_step(
             task_id=task_id,
@@ -394,12 +393,13 @@ def _print_final_scores(results: list[dict], elapsed: float) -> None:
     total_reward = 0.0
     for r in results:
         status = "PASS" if r["success"] else "FAIL"
+        task_score = _safe_score(r["final_reward"])
         print(
             f"  [{status}] {r['task_id']:8s} | "
-            f"score={r['final_reward']:.2f} | "
+            f"score={task_score:.2f} | "
             f"success={r['success']}"
         )
-        total_reward += r["final_reward"]
+        total_reward += task_score
 
     avg_reward = total_reward / len(results)
     print(f"  Avg score    : {avg_reward:.2f}")
